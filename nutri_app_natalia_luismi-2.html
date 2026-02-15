@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#0b1220;
+--card:#111827;
+--card2:#1f2937;
+--accent:#22c55e;
+--text:#f9fafb;
+--muted:#9ca3af;
+}
+body{margin:0;font-family:'Inter',sans-serif;background:linear-gradient(180deg,#0b1220,#0f172a);color:var(--text);} 
+header{padding:24px;text-align:center;font-size:24px;font-weight:700;letter-spacing:0.5px;}
+.container{padding:20px;margin-bottom:110px;}
+.card{background:var(--card);padding:22px;border-radius:24px;margin-bottom:22px;box-shadow:0 15px 40px rgba(0,0,0,0.45);} 
+h3{margin-top:0;margin-bottom:15px;font-size:18px;}
+button{width:100%;padding:15px;border:none;border-radius:18px;background:var(--accent);color:white;font-weight:600;font-size:15px;margin-top:14px;cursor:pointer;}
+button.secondary{background:#374151;}
+select,textarea{width:100%;padding:14px;border-radius:18px;border:none;margin-top:10px;font-size:14px;background:var(--card2);color:white;}
+textarea{min-height:80px;}
+.tabs{position:fixed;bottom:0;width:100%;display:flex;background:#0b1220;border-top:1px solid #1f2937;}
+.tabs button{flex:1;padding:18px;background:none;border:none;color:var(--muted);font-weight:600;font-size:14px;}
+.tabs button.active{color:var(--accent);} 
+.hidden{display:none;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th,td{border:1px solid #1f2937;padding:8px;text-align:center;vertical-align:top;}
+th{background:#1f2937;font-weight:600;}
+.shopping-item{display:flex;justify-content:space-between;align-items:center;background:var(--card2);padding:12px 16px;border-radius:16px;margin-top:10px;font-size:14px;}
+.shopping-item input{transform:scale(1.2);} 
+.qty{color:var(--muted);font-size:12px;}
+</style>
+</head>
+<body>
+<header>NutriApp</header>
+
+<!-- HOME -->
+<div class="container" id="home">
+<div class="card">
+<h3>Resumen Semanal</h3>
+<select id="perfilHome"></select>
+<div id="tablaSemanal"></div>
+</div>
+</div>
+
+<!-- PLAN DIARIO -->
+<div class="container hidden" id="plan">
+<div class="card">
+<h3>Plan Diario</h3>
+<select id="perfil"></select>
+<select id="dia"></select>
+<b>Desayuno</b><textarea id="desayuno"></textarea>
+<b>Comida</b><textarea id="comida"></textarea>
+<b>Cena</b><textarea id="cena"></textarea>
+<button id="guardarBtn">Guardar Cambios</button>
+</div>
+</div>
+
+<!-- COMPRA -->
+<div class="container hidden" id="compra">
+<div class="card">
+<h3>Lista de la Compra Semanal</h3>
+<div id="listaCompra"></div>
+<button class="secondary" id="resetBtn">Reiniciar Lista</button>
+</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+<button id="tabHome" class="active">Home</button>
+<button id="tabPlan">Plan Diario</button>
+<button id="tabCompra">Compra</button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+
+const dias=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+const perfiles=["Natalia","Luismi"];
+
+const planBase={
+Natalia:{Lunes:{Desayuno:"Kéfir + proteína + cereal + fruta",Comida:"130g pollo + 150g patata + verdura",Cena:"150g merluza + verdura"}},
+Luismi:{Lunes:{Desayuno:"Kéfir + proteína + avena",Comida:"200g pollo + 300g patata",Cena:"220g merluza + tortitas"}}
+};
+
+const shoppingBase=[
+{name:"Pechuga de pollo",qty:"2.5 kg"},
+{name:"Salmón",qty:"1.5 kg"},
+{name:"Ternera magra",qty:"1.2 kg"},
+{name:"Huevos",qty:"30 uds"},
+{name:"Claras líquidas",qty:"2 L"},
+{name:"Patata",qty:"3 kg"},
+{name:"Boniato",qty:"2 kg"},
+{name:"Arroz",qty:"1 kg"},
+{name:"Lentejas cocidas",qty:"4 botes"},
+{name:"Kéfir",qty:"4 kg"},
+{name:"Fruta variada",qty:"14-18 piezas"},
+{name:"Verdura variada",qty:"5-6 kg"},
+{name:"Aguacate",qty:"6-8 uds"},
+{name:"Frutos secos",qty:"500 g"},
+{name:"Tortitas arroz",qty:"3 paquetes"},
+{name:"Pan integral",qty:"2 paquetes"}
+];
+
+const perfilHomeEl=document.getElementById('perfilHome');
+const perfilEl=document.getElementById('perfil');
+const diaEl=document.getElementById('dia');
+const desayunoEl=document.getElementById('desayuno');
+const comidaEl=document.getElementById('comida');
+const cenaEl=document.getElementById('cena');
+const tablaSemanalEl=document.getElementById('tablaSemanal');
+const listaCompraEl=document.getElementById('listaCompra');
+
+// Populate selects
+perfiles.forEach(p=>{
+perfilHomeEl.innerHTML+=`<option value="${p}">${p}</option>`;
+perfilEl.innerHTML+=`<option value="${p}">${p}</option>`;
+});
+
+dias.forEach(d=>{
+diaEl.innerHTML+=`<option value="${d}">${d}</option>`;
+});
+
+function getPlan(perfil,dia){
+let saved=localStorage.getItem(perfil+dia);
+if(saved) return JSON.parse(saved);
+if(planBase[perfil] && planBase[perfil][dia]) return planBase[perfil][dia];
+return planBase[perfil]?.Lunes || {Desayuno:'',Comida:'',Cena:''};
+}
+
+function renderHome(){
+let perfil=perfilHomeEl.value;
+let html='<table><tr><th></th>';
+dias.forEach(d=>html+=`<th>${d}</th>`);
+html+='</tr>';
+['Desayuno','Comida','Cena'].forEach(tipo=>{
+html+=`<tr><th>${tipo}</th>`;
+dias.forEach(d=>{
+let data=getPlan(perfil,d);
+html+=`<td>${data[tipo]||''}</td>`;
+});
+html+='</tr>';
+});
+html+='</table>';
+tablaSemanalEl.innerHTML=html;
+}
+
+function cargarPlan(){
+let perfil=perfilEl.value;
+let dia=diaEl.value;
+let data=getPlan(perfil,dia);
+desayunoEl.value=data.Desayuno||'';
+comidaEl.value=data.Comida||'';
+cenaEl.value=data.Cena||'';
+}
+
+function guardarPlan(){
+let perfilSel=perfilEl.value;
+let diaSel=diaEl.value;
+let data={Desayuno:desayunoEl.value,Comida:comidaEl.value,Cena:cenaEl.value};
+localStorage.setItem(perfilSel+diaSel,JSON.stringify(data));
+renderHome();
+alert('Plan guardado');
+}
+
+function renderLista(){
+listaCompraEl.innerHTML='';
+shoppingBase.forEach(item=>{
+let checked=localStorage.getItem('check_'+item.name)==='true';
+let div=document.createElement('div');
+div.className='shopping-item';
+div.innerHTML=`<div><strong>${item.name}</strong><div class='qty'>${item.qty}</div></div>`;
+let checkbox=document.createElement('input');
+checkbox.type='checkbox';
+checkbox.checked=checked;
+checkbox.addEventListener('change',()=>{
+localStorage.setItem('check_'+item.name,checkbox.checked);
+});
+div.appendChild(checkbox);
+listaCompraEl.appendChild(div);
+});
+}
+
+function resetLista(){
+shoppingBase.forEach(item=>localStorage.removeItem('check_'+item.name));
+renderLista();
+}
+
+function showTab(tab){
+document.getElementById('home').classList.add('hidden');
+document.getElementById('plan').classList.add('hidden');
+document.getElementById('compra').classList.add('hidden');
+document.getElementById('tabHome').classList.remove('active');
+document.getElementById('tabPlan').classList.remove('active');
+document.getElementById('tabCompra').classList.remove('active');
+if(tab==='home'){document.getElementById('home').classList.remove('hidden');document.getElementById('tabHome').classList.add('active');}
+if(tab==='plan'){document.getElementById('plan').classList.remove('hidden');document.getElementById('tabPlan').classList.add('active');}
+if(tab==='compra'){document.getElementById('compra').classList.remove('hidden');document.getElementById('tabCompra').classList.add('active');}
+}
+
+// Events
+perfilHomeEl.addEventListener('change',renderHome);
+perfilEl.addEventListener('change',cargarPlan);
+diaEl.addEventListener('change',cargarPlan);
+document.getElementById('guardarBtn').addEventListener('click',guardarPlan);
+document.getElementById('resetBtn').addEventListener('click',resetLista);
+document.getElementById('tabHome').addEventListener('click',()=>showTab('home'));
+document.getElementById('tabPlan').addEventListener('click',()=>showTab('plan'));
+document.getElementById('tabCompra').addEventListener('click',()=>showTab('compra'));
+
+// Init
+renderHome();
+cargarPlan();
+renderLista();
+
+});
+</script>
+
+</body>
+</html>
