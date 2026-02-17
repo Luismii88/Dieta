@@ -16,16 +16,40 @@
 }
 body{margin:0;font-family:'Inter',sans-serif;background:linear-gradient(180deg,#0b1220,#0f172a);color:var(--text);} 
 header{padding:24px;text-align:center;font-size:24px;font-weight:700;letter-spacing:0.5px;}
-.container{padding:20px;margin-bottom:110px;}
+
+/* TOP NAVIGATION */
+.topnav{
+display:flex;
+justify-content:space-around;
+align-items:center;
+background:#0b1220;
+border-bottom:1px solid #1f2937;
+position:sticky;
+top:0;
+z-index:1000;
+}
+.topnav button{
+flex:1;
+padding:18px 10px;
+background:none;
+border:none;
+color:var(--muted);
+font-weight:600;
+font-size:14px;
+cursor:pointer;
+}
+.topnav button.active{
+color:var(--accent);
+border-bottom:3px solid var(--accent);
+}
+
+.container{padding:20px;margin-bottom:40px;}
 .card{background:var(--card);padding:22px;border-radius:24px;margin-bottom:22px;box-shadow:0 15px 40px rgba(0,0,0,0.45);} 
 h3{margin-top:0;margin-bottom:15px;font-size:18px;}
-button{width:100%;padding:15px;border:none;border-radius:18px;background:var(--accent);color:white;font-weight:600;font-size:15px;margin-top:14px;cursor:pointer;}
-button.secondary{background:#374151;}
+button.primary{width:100%;padding:15px;border:none;border-radius:18px;background:var(--accent);color:white;font-weight:600;font-size:15px;margin-top:14px;cursor:pointer;}
+button.secondary{width:100%;padding:15px;border:none;border-radius:18px;background:#374151;color:white;font-weight:600;font-size:15px;margin-top:14px;cursor:pointer;}
 select,textarea{width:100%;padding:14px;border-radius:18px;border:none;margin-top:10px;font-size:14px;background:var(--card2);color:white;}
 textarea{min-height:80px;}
-.tabs{position:fixed;bottom:0;width:100%;display:flex;background:#0b1220;border-top:1px solid #1f2937;}
-.tabs button{flex:1;padding:18px;background:none;border:none;color:var(--muted);font-weight:600;font-size:14px;}
-.tabs button.active{color:var(--accent);} 
 .hidden{display:none;}
 table{width:100%;border-collapse:collapse;font-size:12px;}
 th,td{border:1px solid #1f2937;padding:8px;text-align:center;vertical-align:top;}
@@ -37,6 +61,13 @@ th{background:#1f2937;font-weight:600;}
 </head>
 <body>
 <header>NutriApp</header>
+
+<!-- TOP NAVIGATION -->
+<div class="topnav">
+<button id="tabHome" class="active">Home</button>
+<button id="tabPlan">Plan Diario</button>
+<button id="tabCompra">Compra</button>
+</div>
 
 <!-- HOME -->
 <div class="container" id="home">
@@ -56,7 +87,7 @@ th{background:#1f2937;font-weight:600;}
 <b>Desayuno</b><textarea id="desayuno"></textarea>
 <b>Comida</b><textarea id="comida"></textarea>
 <b>Cena</b><textarea id="cena"></textarea>
-<button id="guardarBtn">Guardar Cambios</button>
+<button class="primary" id="guardarBtn">Guardar Cambios</button>
 </div>
 </div>
 
@@ -67,13 +98,6 @@ th{background:#1f2937;font-weight:600;}
 <div id="listaCompra"></div>
 <button class="secondary" id="resetBtn">Reiniciar Lista</button>
 </div>
-</div>
-
-<!-- TABS -->
-<div class="tabs">
-<button id="tabHome" class="active">Home</button>
-<button id="tabPlan">Plan Diario</button>
-<button id="tabCompra">Compra</button>
 </div>
 
 <script>
