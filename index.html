@@ -7,10 +7,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NutriApp">
+
 <title>NutriApp</title>
+
+<link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-<!-- Firebase -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -35,12 +38,17 @@ textarea{min-height:80px;}
 button{width:100%;padding:15px;border:none;border-radius:18px;background:var(--accent);color:white;font-weight:600;font-size:15px;margin-top:14px;cursor:pointer;}
 button.secondary{background:#374151;}
 button.danger{background:var(--danger);} 
+
 .topnav{display:flex;justify-content:space-around;background:#0b1220;border-bottom:1px solid #1f2937;position:sticky;top:0;z-index:1000;}
 .topnav button{flex:1;padding:16px;background:none;border:none;color:var(--muted);font-weight:600;}
 .topnav button.active{color:var(--accent);border-bottom:3px solid var(--accent);} 
+
+.table-wrapper{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;font-size:12px;}
 th,td{border:1px solid #1f2937;padding:8px;text-align:center;vertical-align:top;}
 th{background:#1f2937;}
+
+.center{text-align:center;margin-top:60px;}
 </style>
 </head>
 <body>
@@ -48,8 +56,10 @@ th{background:#1f2937;}
 <!-- LOGIN -->
 <div id="loginScreen" class="container">
 <div class="card">
+<div class="center">
 <h1>NutriApp</h1>
 <p style="color:var(--muted)">Acceso Seguro</p>
+</div>
 <input type="email" id="email" placeholder="Email">
 <input type="password" id="password" placeholder="Contraseña">
 <button id="loginBtn">Entrar</button>
@@ -60,12 +70,14 @@ th{background:#1f2937;}
 
 <!-- APP -->
 <div id="app" class="hidden">
+
 <div class="topnav">
 <button id="tabHome" class="active">Home</button>
 <button id="tabPlan">Plan Diario</button>
 <button id="logoutBtn">Salir</button>
 </div>
 
+<!-- HOME -->
 <div class="container" id="home">
 <div class="card">
 <h3>Resumen Semanal</h3>
@@ -73,10 +85,13 @@ th{background:#1f2937;}
 <option value="Natalia">Natalia</option>
 <option value="Luismi">Luismi</option>
 </select>
+<div class="table-wrapper">
 <div id="tablaSemanal"></div>
 </div>
 </div>
+</div>
 
+<!-- PLAN DIARIO -->
 <div class="container hidden" id="plan">
 <div class="card">
 <h3>Plan Diario</h3>
@@ -88,13 +103,14 @@ th{background:#1f2937;}
 <b>Desayuno</b><textarea id="desayuno"></textarea>
 <b>Comida</b><textarea id="comida"></textarea>
 <b>Cena</b><textarea id="cena"></textarea>
-<button id="guardarBtn">Guardar</button>
-</div>
+<button id="guardarBtn">Guardar Cambios</button>
 </div>
 </div>
 
+</div>
+
 <script>
-// 🔥 CONFIG REAL DE FIREBASE
+// FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCaQq-aQ5kj2TdvccyejdjNTcZvViKIncY",
   authDomain: "nutriapp-2eeb3.firebaseapp.com",
@@ -110,12 +126,10 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 const dias=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
-
 const diaEl=document.getElementById('dia');
 dias.forEach(d=>diaEl.innerHTML+=`<option value="${d}">${d}</option>`);
 
 // AUTH
-
 document.getElementById('loginBtn').onclick=()=>{
 auth.signInWithEmailAndPassword(email.value,password.value)
 .catch(()=>loginError.style.display='block');
@@ -140,7 +154,6 @@ app.classList.add('hidden');
 });
 
 // DATA
-
 async function savePlan(){
 const user=auth.currentUser;
 await db.collection("plans").doc(user.uid).set({
@@ -156,8 +169,7 @@ loadPlan();
 async function loadPlan(){
 const user=auth.currentUser;
 const doc=await db.collection("plans").doc(user.uid).get();
-if(!doc.exists){renderHome({});return;}
-renderHome(doc.data());
+renderHome(doc.exists?doc.data():{});
 }
 
 function renderHome(data={}){
@@ -178,11 +190,16 @@ html+='</table>';
 tablaSemanal.innerHTML=html;
 }
 
-perfilHome.onchange=()=>loadPlan();
+perfilHome.onchange=loadPlan;
 document.getElementById('guardarBtn').onclick=savePlan;
 
 document.getElementById('tabHome').onclick=()=>{home.classList.remove('hidden');plan.classList.add('hidden');};
 document.getElementById('tabPlan').onclick=()=>{home.classList.add('hidden');plan.classList.remove('hidden');};
+
+// SERVICE WORKER
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
 </script>
 
 </body>
