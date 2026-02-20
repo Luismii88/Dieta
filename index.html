@@ -10,7 +10,10 @@
 
 <title>NutriApp</title>
 
-<link rel="manifest" href="manifest.json">
+<!-- PWA LINKS IMPORTANTES -->
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-512.PNG">
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <!-- Firebase SDK -->
@@ -48,7 +51,7 @@ table{width:100%;border-collapse:collapse;font-size:12px;}
 th,td{border:1px solid #1f2937;padding:8px;text-align:center;vertical-align:top;}
 th{background:#1f2937;}
 
-.center{text-align:center;margin-top:60px;}
+.center{text-align:center;margin-top:40px;}
 </style>
 </head>
 <body>
@@ -130,6 +133,7 @@ const diaEl=document.getElementById('dia');
 dias.forEach(d=>diaEl.innerHTML+=`<option value="${d}">${d}</option>`);
 
 // AUTH
+
 document.getElementById('loginBtn').onclick=()=>{
 auth.signInWithEmailAndPassword(email.value,password.value)
 .catch(()=>loginError.style.display='block');
@@ -198,7 +202,7 @@ document.getElementById('tabPlan').onclick=()=>{home.classList.add('hidden');pla
 
 // SERVICE WORKER
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
+  navigator.serviceWorker.register('./service-worker.js');
 }
 </script>
 
