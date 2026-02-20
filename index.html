@@ -3,8 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NutriApp">
 <title>NutriApp</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <style>
 :root{
 --bg:#0b1220;
@@ -13,251 +23,166 @@
 --accent:#22c55e;
 --text:#f9fafb;
 --muted:#9ca3af;
+--danger:#ef4444;
 }
 body{margin:0;font-family:'Inter',sans-serif;background:linear-gradient(180deg,#0b1220,#0f172a);color:var(--text);} 
-header{padding:24px;text-align:center;font-size:24px;font-weight:700;letter-spacing:0.5px;}
-
-/* TOP NAVIGATION */
-.topnav{
-display:flex;
-justify-content:space-around;
-align-items:center;
-background:#0b1220;
-border-bottom:1px solid #1f2937;
-position:sticky;
-top:0;
-z-index:1000;
-}
-.topnav button{
-flex:1;
-padding:18px 10px;
-background:none;
-border:none;
-color:var(--muted);
-font-weight:600;
-font-size:14px;
-cursor:pointer;
-}
-.topnav button.active{
-color:var(--accent);
-border-bottom:3px solid var(--accent);
-}
-
-.container{padding:20px;margin-bottom:40px;}
-.card{background:var(--card);padding:22px;border-radius:24px;margin-bottom:22px;box-shadow:0 15px 40px rgba(0,0,0,0.45);} 
-h3{margin-top:0;margin-bottom:15px;font-size:18px;}
-button.primary{width:100%;padding:15px;border:none;border-radius:18px;background:var(--accent);color:white;font-weight:600;font-size:15px;margin-top:14px;cursor:pointer;}
-button.secondary{width:100%;padding:15px;border:none;border-radius:18px;background:#374151;color:white;font-weight:600;font-size:15px;margin-top:14px;cursor:pointer;}
-select,textarea{width:100%;padding:14px;border-radius:18px;border:none;margin-top:10px;font-size:14px;background:var(--card2);color:white;}
-textarea{min-height:80px;}
+h1{margin:0;font-size:26px;font-weight:700;}
 .hidden{display:none;}
+.container{padding:24px;}
+.card{background:var(--card);padding:24px;border-radius:24px;margin-bottom:20px;box-shadow:0 15px 40px rgba(0,0,0,0.45);} 
+input,select,textarea{width:100%;padding:14px;border-radius:18px;border:none;margin-top:10px;font-size:14px;background:var(--card2);color:white;}
+textarea{min-height:80px;}
+button{width:100%;padding:15px;border:none;border-radius:18px;background:var(--accent);color:white;font-weight:600;font-size:15px;margin-top:14px;cursor:pointer;}
+button.secondary{background:#374151;}
+button.danger{background:var(--danger);} 
+.topnav{display:flex;justify-content:space-around;background:#0b1220;border-bottom:1px solid #1f2937;position:sticky;top:0;z-index:1000;}
+.topnav button{flex:1;padding:16px;background:none;border:none;color:var(--muted);font-weight:600;}
+.topnav button.active{color:var(--accent);border-bottom:3px solid var(--accent);} 
 table{width:100%;border-collapse:collapse;font-size:12px;}
 th,td{border:1px solid #1f2937;padding:8px;text-align:center;vertical-align:top;}
-th{background:#1f2937;font-weight:600;}
-.shopping-item{display:flex;justify-content:space-between;align-items:center;background:var(--card2);padding:12px 16px;border-radius:16px;margin-top:10px;font-size:14px;}
-.shopping-item input{transform:scale(1.2);} 
-.qty{color:var(--muted);font-size:12px;}
+th{background:#1f2937;}
 </style>
 </head>
 <body>
-<header>NutriApp</header>
 
-<!-- TOP NAVIGATION -->
+<!-- LOGIN -->
+<div id="loginScreen" class="container">
+<div class="card">
+<h1>NutriApp</h1>
+<p style="color:var(--muted)">Acceso Seguro</p>
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Contraseña">
+<button id="loginBtn">Entrar</button>
+<button id="registerBtn" class="secondary">Crear Cuenta</button>
+<p id="loginError" style="color:var(--danger);display:none;">Error de autenticación</p>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
 <div class="topnav">
 <button id="tabHome" class="active">Home</button>
 <button id="tabPlan">Plan Diario</button>
-<button id="tabCompra">Compra</button>
+<button id="logoutBtn">Salir</button>
 </div>
 
-<!-- HOME -->
 <div class="container" id="home">
 <div class="card">
 <h3>Resumen Semanal</h3>
-<select id="perfilHome"></select>
+<select id="perfilHome">
+<option value="Natalia">Natalia</option>
+<option value="Luismi">Luismi</option>
+</select>
 <div id="tablaSemanal"></div>
 </div>
 </div>
 
-<!-- PLAN DIARIO -->
 <div class="container hidden" id="plan">
 <div class="card">
 <h3>Plan Diario</h3>
-<select id="perfil"></select>
+<select id="perfil">
+<option value="Natalia">Natalia</option>
+<option value="Luismi">Luismi</option>
+</select>
 <select id="dia"></select>
 <b>Desayuno</b><textarea id="desayuno"></textarea>
 <b>Comida</b><textarea id="comida"></textarea>
 <b>Cena</b><textarea id="cena"></textarea>
-<button class="primary" id="guardarBtn">Guardar Cambios</button>
+<button id="guardarBtn">Guardar</button>
 </div>
-</div>
-
-<!-- COMPRA -->
-<div class="container hidden" id="compra">
-<div class="card">
-<h3>Lista de la Compra Semanal</h3>
-<div id="listaCompra"></div>
-<button class="secondary" id="resetBtn">Reiniciar Lista</button>
 </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function(){
-
-const dias=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
-const perfiles=["Natalia","Luismi"];
-
-const planBase={
-Natalia:{
-Lunes:{Desayuno:"250g kéfir + 20g proteína + 30g cereal + 1 fruta",Comida:"130g pechuga pollo + 150g patata + verduras + 5ml AOVE",Cena:"150g merluza + verduras + 5ml AOVE"},
-Martes:{Desayuno:"2 huevos + 100g claras + 1 tostada integral + 50g aguacate",Comida:"120g ternera + 40g arroz (crudo) + verduras + 5ml AOVE",Cena:"2 huevos + 1 lata atún natural + verduras"},
-Miércoles:{Desayuno:"250g kéfir + 20g proteína + 30g cereal + fruta",Comida:"120g salmón + 180g boniato + verduras",Cena:"150g pechuga pollo + 100g guisantes"},
-Jueves:{Desayuno:"4 tortitas arroz + 120g claras + 60g pavo + fruta",Comida:"160g lentejas cocidas + 1 huevo + verduras",Cena:"150g pescado blanco + verduras"},
-Viernes:{Desayuno:"250g kéfir + proteína + cereal + fruta",Comida:"130g pollo + 40g arroz (crudo) + verduras",Cena:"120g ternera + verduras"},
-Sábado:{Desayuno:"2 huevos + 100g claras + 1 tostada integral",Comida:"120g salmón + 150g patata + verduras",Cena:"150g pechuga pollo + verduras"},
-Domingo:{Desayuno:"250g kéfir + fruta",Comida:"Comida libre controlada (proteína alta)",Cena:"150g pescado blanco + verduras"}
-},
-Luismi:{
-Lunes:{Desayuno:"300g kéfir + 30g proteína + 50g avena + 20g frutos secos + fruta",Comida:"200g pechuga pollo + 300g patata + verduras + 10ml AOVE",Cena:"220g merluza + verduras + 2 tortitas arroz"},
-Martes:{Desayuno:"3 huevos + 150g claras + 1 tostada integral + 80g aguacate",Comida:"180g ternera + 60g arroz (crudo) + verduras + 10ml AOVE",Cena:"3 huevos + 1 lata atún + verduras"},
-Miércoles:{Desayuno:"300g kéfir + proteína + 50g avena + fruta",Comida:"200g salmón + 300g boniato + verduras",Cena:"220g pechuga pollo + 150g guisantes + 2 tortitas arroz"},
-Jueves:{Desayuno:"6 tortitas arroz + 200g claras + 80g pavo + fruta",Comida:"300g lentejas cocidas + 2 huevos + verduras",Cena:"220g pescado blanco + verduras"},
-Viernes:{Desayuno:"300g kéfir + proteína + avena + fruta",Comida:"200g pollo + 70g arroz (crudo) + verduras",Cena:"180g ternera + verduras + 2 tortitas arroz"},
-Sábado:{Desayuno:"3 huevos + 150g claras + 2 tostadas integrales",Comida:"200g salmón + 300g patata + verduras",Cena:"220g pechuga pollo + verduras + 2 tortitas arroz"},
-Domingo:{Desayuno:"300g kéfir + fruta + frutos secos",Comida:"Comida libre controlada (proteína alta)",Cena:"200g pescado blanco + verduras"}
-}
+// 🔥 CONFIG REAL DE FIREBASE
+const firebaseConfig = {
+  apiKey: "AIzaSyCaQq-aQ5kj2TdvccyejdjNTcZvViKIncY",
+  authDomain: "nutriapp-2eeb3.firebaseapp.com",
+  projectId: "nutriapp-2eeb3",
+  storageBucket: "nutriapp-2eeb3.firebasestorage.app",
+  messagingSenderId: "7989666043",
+  appId: "1:7989666043:web:97c20b6a3c963703d4105e",
+  measurementId: "G-B870RRM0T6"
 };
 
-const shoppingBase=[
-{name:"Pechuga de pollo",qty:"2.5 kg"},
-{name:"Salmón",qty:"1.5 kg"},
-{name:"Ternera magra",qty:"1.2 kg"},
-{name:"Huevos",qty:"30 uds"},
-{name:"Claras líquidas",qty:"2 L"},
-{name:"Patata",qty:"3 kg"},
-{name:"Boniato",qty:"2 kg"},
-{name:"Arroz",qty:"1 kg"},
-{name:"Lentejas cocidas",qty:"4 botes"},
-{name:"Kéfir",qty:"4 kg"},
-{name:"Fruta variada",qty:"14-18 piezas"},
-{name:"Verdura variada",qty:"5-6 kg"},
-{name:"Aguacate",qty:"6-8 uds"},
-{name:"Frutos secos",qty:"500 g"},
-{name:"Tortitas arroz",qty:"3 paquetes"},
-{name:"Pan integral",qty:"2 paquetes"}
-];
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-const perfilHomeEl=document.getElementById('perfilHome');
-const perfilEl=document.getElementById('perfil');
+const dias=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+
 const diaEl=document.getElementById('dia');
-const desayunoEl=document.getElementById('desayuno');
-const comidaEl=document.getElementById('comida');
-const cenaEl=document.getElementById('cena');
-const tablaSemanalEl=document.getElementById('tablaSemanal');
-const listaCompraEl=document.getElementById('listaCompra');
+dias.forEach(d=>diaEl.innerHTML+=`<option value="${d}">${d}</option>`);
 
-// Populate selects
-perfiles.forEach(p=>{
-perfilHomeEl.innerHTML+=`<option value="${p}">${p}</option>`;
-perfilEl.innerHTML+=`<option value="${p}">${p}</option>`;
+// AUTH
+
+document.getElementById('loginBtn').onclick=()=>{
+auth.signInWithEmailAndPassword(email.value,password.value)
+.catch(()=>loginError.style.display='block');
+};
+
+document.getElementById('registerBtn').onclick=()=>{
+auth.createUserWithEmailAndPassword(email.value,password.value)
+.catch(()=>loginError.style.display='block');
+};
+
+document.getElementById('logoutBtn').onclick=()=>auth.signOut();
+
+auth.onAuthStateChanged(user=>{
+if(user){
+loginScreen.classList.add('hidden');
+app.classList.remove('hidden');
+loadPlan();
+}else{
+loginScreen.classList.remove('hidden');
+app.classList.add('hidden');
+}
 });
 
-dias.forEach(d=>{
-diaEl.innerHTML+=`<option value="${d}">${d}</option>`;
-});
+// DATA
 
-function getPlan(perfil,dia){
-let saved=localStorage.getItem(perfil+dia);
-if(saved) return JSON.parse(saved);
-if(planBase[perfil] && planBase[perfil][dia]) return planBase[perfil][dia];
-return planBase[perfil]?.Lunes || {Desayuno:'',Comida:'',Cena:''};
+async function savePlan(){
+const user=auth.currentUser;
+await db.collection("plans").doc(user.uid).set({
+[perfil.value+dia.value]:{
+Desayuno:desayuno.value,
+Comida:comida.value,
+Cena:cena.value
+}
+},{merge:true});
+loadPlan();
 }
 
-function renderHome(){
-let perfil=perfilHomeEl.value;
+async function loadPlan(){
+const user=auth.currentUser;
+const doc=await db.collection("plans").doc(user.uid).get();
+if(!doc.exists){renderHome({});return;}
+renderHome(doc.data());
+}
+
+function renderHome(data={}){
+let perfilSel=perfilHome.value;
 let html='<table><tr><th></th>';
 dias.forEach(d=>html+=`<th>${d}</th>`);
 html+='</tr>';
 ['Desayuno','Comida','Cena'].forEach(tipo=>{
 html+=`<tr><th>${tipo}</th>`;
 dias.forEach(d=>{
-let data=getPlan(perfil,d);
-html+=`<td>${data[tipo]||''}</td>`;
+let key=perfilSel+d;
+let cell=data[key]?data[key][tipo]:'';
+html+=`<td>${cell||''}</td>`;
 });
 html+='</tr>';
 });
 html+='</table>';
-tablaSemanalEl.innerHTML=html;
+tablaSemanal.innerHTML=html;
 }
 
-function cargarPlan(){
-let perfil=perfilEl.value;
-let dia=diaEl.value;
-let data=getPlan(perfil,dia);
-desayunoEl.value=data.Desayuno||'';
-comidaEl.value=data.Comida||'';
-cenaEl.value=data.Cena||'';
-}
+perfilHome.onchange=()=>loadPlan();
+document.getElementById('guardarBtn').onclick=savePlan;
 
-function guardarPlan(){
-let perfilSel=perfilEl.value;
-let diaSel=diaEl.value;
-let data={Desayuno:desayunoEl.value,Comida:comidaEl.value,Cena:cenaEl.value};
-localStorage.setItem(perfilSel+diaSel,JSON.stringify(data));
-renderHome();
-alert('Plan guardado');
-}
-
-function renderLista(){
-listaCompraEl.innerHTML='';
-shoppingBase.forEach(item=>{
-let checked=localStorage.getItem('check_'+item.name)==='true';
-let div=document.createElement('div');
-div.className='shopping-item';
-div.innerHTML=`<div><strong>${item.name}</strong><div class='qty'>${item.qty}</div></div>`;
-let checkbox=document.createElement('input');
-checkbox.type='checkbox';
-checkbox.checked=checked;
-checkbox.addEventListener('change',()=>{
-localStorage.setItem('check_'+item.name,checkbox.checked);
-});
-div.appendChild(checkbox);
-listaCompraEl.appendChild(div);
-});
-}
-
-function resetLista(){
-shoppingBase.forEach(item=>localStorage.removeItem('check_'+item.name));
-renderLista();
-}
-
-function showTab(tab){
-document.getElementById('home').classList.add('hidden');
-document.getElementById('plan').classList.add('hidden');
-document.getElementById('compra').classList.add('hidden');
-document.getElementById('tabHome').classList.remove('active');
-document.getElementById('tabPlan').classList.remove('active');
-document.getElementById('tabCompra').classList.remove('active');
-if(tab==='home'){document.getElementById('home').classList.remove('hidden');document.getElementById('tabHome').classList.add('active');}
-if(tab==='plan'){document.getElementById('plan').classList.remove('hidden');document.getElementById('tabPlan').classList.add('active');}
-if(tab==='compra'){document.getElementById('compra').classList.remove('hidden');document.getElementById('tabCompra').classList.add('active');}
-}
-
-// Events
-perfilHomeEl.addEventListener('change',renderHome);
-perfilEl.addEventListener('change',cargarPlan);
-diaEl.addEventListener('change',cargarPlan);
-document.getElementById('guardarBtn').addEventListener('click',guardarPlan);
-document.getElementById('resetBtn').addEventListener('click',resetLista);
-document.getElementById('tabHome').addEventListener('click',()=>showTab('home'));
-document.getElementById('tabPlan').addEventListener('click',()=>showTab('plan'));
-document.getElementById('tabCompra').addEventListener('click',()=>showTab('compra'));
-
-// Init
-renderHome();
-cargarPlan();
-renderLista();
-
-});
+document.getElementById('tabHome').onclick=()=>{home.classList.remove('hidden');plan.classList.add('hidden');};
+document.getElementById('tabPlan').onclick=()=>{home.classList.add('hidden');plan.classList.remove('hidden');};
 </script>
 
 </body>
