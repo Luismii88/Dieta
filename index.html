@@ -131,20 +131,25 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+// 🔥 MUY IMPORTANTE
+auth.useDeviceLanguage(); // 👈 AQUÍ VA
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// 🔥 PROCESAR REDIRECT DE GOOGLE (MUY IMPORTANTE)
+// 🔥 PROCESAR REDIRECT DE GOOGLE
 auth.getRedirectResult()
   .then((result) => {
     if (result.user) {
-      console.log("Login Google correcto:", result.user.email);
+      console.log("Google login correcto");
     }
   })
   .catch((error) => {
-    console.error("Error redirect:", error);
+    console.error("Error en redirect:", error);
   });
+
 
 // ===== VARIABLES =====
 const dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
