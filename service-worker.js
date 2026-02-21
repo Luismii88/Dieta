@@ -1,38 +1,36 @@
 // ===============================
 // NutriApp Service Worker
-// Production Ready (Safe Version)
+// Firebase Safe Version
 // ===============================
 
-const CACHE_NAME = "nutriapp-v1";
+const CACHE_NAME = "nutriapp-v2";
 
-// Archivos que queremos cachear para que funcione como app
-const ASSETS_TO_CACHE = [
+const STATIC_ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon-192.PNG",
-  "./icon-512.PNG",
-  "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+  "./icon-512.PNG"
 ];
 
-// INSTALACIÓN
+// INSTALAR
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(STATIC_ASSETS);
     })
   );
 });
 
-// ACTIVACIÓN
+// ACTIVAR
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) =>
+    caches.keys().then(keys =>
       Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
+        keys.map(key => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
           }
         })
       )
@@ -41,29 +39,29 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// FETCH (Estrategia inteligente)
-// - Archivos estáticos → cache-first
-// - Firebase / API calls → network-first
+// FETCH
 self.addEventListener("fetch", (event) => {
 
-  // No interferir con Firebase ni peticiones dinámicas
-  if (event.request.url.includes("firebase") || 
-      event.request.url.includes("firestore") ||
-      event.request.method !== "GET") {
+  const url = event.request.url;
+
+  // 🔥 NO INTERFERIR CON FIREBASE
+  if (
+    url.includes("firebase") ||
+    url.includes("firestore") ||
+    url.includes("googleapis") ||
+    url.includes("identitytoolkit") ||
+    event.request.method !== "GET"
+  ) {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return (
-        cachedResponse ||
-        fetch(event.request).then((networkResponse) => {
-          return caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, networkResponse.clone());
-            return networkResponse;
-          });
-        })
-      );
-    })
-  );
+  // Cache-first solo para assets locales
+  if (url.startsWith(self.location.origin)) {
+    event.respondWith(
+      caches.match(event.request).then(response => {
+        return response || fetch(event.request);
+      })
+    );
+  }
+
 });
