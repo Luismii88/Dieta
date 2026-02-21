@@ -1,7 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NutriApp">
+
+<title>NutriApp</title>
+
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-512.PNG">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:-apple-system, BlinkMacSystemFont, sans-serif;
+  background:#0b1220;
+  color:white;
+}
+.hidden{display:none;}
+.container{padding:20px;}
+.card{
+  background:#111827;
+  padding:20px;
+  border-radius:20px;
+  margin-bottom:20px;
+}
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:16px;
+  margin-top:10px;
+  background:#22c55e;
+  color:white;
+  font-weight:600;
+}
+button.secondary{background:#374151;}
+.topnav{
+  display:flex;
+  justify-content:space-around;
+  background:#0b1220;
+  border-bottom:1px solid #1f2937;
+}
+.topnav button{
+  flex:1;
+  background:none;
+  color:#9ca3af;
+}
+.topnav button.active{
+  color:#22c55e;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+}
+th,td{
+  border:1px solid #1f2937;
+  padding:6px;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="container">
+  <div class="card">
+    <h2>NutriApp</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button id="loginBtn">Entrar</button>
+    <button id="registerBtn" class="secondary">Crear cuenta</button>
+    <button id="googleBtn" class="secondary">Entrar con Google</button>
+    <p id="loginError" style="color:red;"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+<div class="topnav">
+  <button id="tabHome" class="active">Home</button>
+  <button id="tabPlan">Plan</button>
+  <button id="logoutBtn">Salir</button>
+</div>
+
+<div id="home" class="container">
+  <div class="card">
+    <select id="perfilHome">
+      <option value="Natalia">Natalia</option>
+      <option value="Luismi">Luismi</option>
+    </select>
+    <div id="tablaSemanal"></div>
+  </div>
+</div>
+
+<div id="plan" class="container hidden">
+  <div class="card">
+    <select id="perfil">
+      <option value="Natalia">Natalia</option>
+      <option value="Luismi">Luismi</option>
+    </select>
+    <select id="dia"></select>
+    <textarea id="desayuno" placeholder="Desayuno"></textarea>
+    <textarea id="comida" placeholder="Comida"></textarea>
+    <textarea id="cena" placeholder="Cena"></textarea>
+    <button id="guardarBtn">Guardar</button>
+  </div>
+</div>
+
+</div>
+
 <script>
-// ==========================
-// FIREBASE CONFIG
-// ==========================
+
+// ===== FIREBASE CONFIG =====
 const firebaseConfig = {
   apiKey: "AIzaSyCaQq-aQ5kj2TdvccyejdjNTcZvViKIncY",
   authDomain: "nutriapp-2eeb3.firebaseapp.com",
@@ -14,151 +133,92 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-
-// Persistencia REAL en iOS PWA
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// ==========================
-// VARIABLES
-// ==========================
+// ===== VARIABLES =====
 const dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
-const diaEl = document.getElementById('dia');
-dias.forEach(d => diaEl.innerHTML += `<option value="${d}">${d}</option>`);
+const diaEl = document.getElementById("dia");
+dias.forEach(d => diaEl.innerHTML += `<option>${d}</option>`);
 
-// ==========================
-// AUTH EMAIL LOGIN
-// ==========================
-document.getElementById('loginBtn').onclick = () => {
-  auth.signInWithEmailAndPassword(email.value, password.value)
-    .catch(error => {
-      loginError.style.display = 'block';
-      loginError.innerText = error.message;
-    });
+// ===== LOGIN =====
+loginBtn.onclick = () => {
+  auth.signInWithEmailAndPassword(email.value,password.value)
+  .catch(e => loginError.innerText = e.message);
 };
 
-// ==========================
-// AUTH REGISTER
-// ==========================
-document.getElementById('registerBtn').onclick = () => {
-  auth.createUserWithEmailAndPassword(email.value, password.value)
-    .then(() => {
-      alert("Cuenta creada correctamente");
-    })
-    .catch(error => {
-      loginError.style.display = 'block';
-      loginError.innerText = error.message;
-    });
+registerBtn.onclick = () => {
+  auth.createUserWithEmailAndPassword(email.value,password.value)
+  .catch(e => loginError.innerText = e.message);
 };
 
-// ==========================
-// AUTH GOOGLE (REDIRECT PARA iOS)
-// ==========================
-document.getElementById('googleBtn').onclick = async () => {
+googleBtn.onclick = async () => {
   const provider = new firebase.auth.GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
-
-  try {
-    await auth.signInWithRedirect(provider);
-  } catch (error) {
-    loginError.style.display = 'block';
-    loginError.innerText = error.message;
-  }
+  await auth.signInWithRedirect(provider);
 };
 
-// ==========================
-// LOGOUT
-// ==========================
-document.getElementById('logoutBtn').onclick = () => auth.signOut();
+logoutBtn.onclick = () => auth.signOut();
 
-// ==========================
-// AUTH STATE LISTENER
-// ==========================
+// ===== AUTH STATE =====
 auth.onAuthStateChanged(user => {
-  if (user) {
-    loginScreen.classList.add('hidden');
-    app.classList.remove('hidden');
+  if(user){
+    loginScreen.classList.add("hidden");
+    app.classList.remove("hidden");
     loadPlan();
-  } else {
-    loginScreen.classList.remove('hidden');
-    app.classList.add('hidden');
+  }else{
+    loginScreen.classList.remove("hidden");
+    app.classList.add("hidden");
   }
 });
 
-// ==========================
-// SAVE PLAN
-// ==========================
-async function savePlan() {
+// ===== DATA =====
+async function savePlan(){
   const user = auth.currentUser;
-  if (!user) return;
-
   await db.collection("plans").doc(user.uid).set({
     [perfil.value + dia.value]: {
       Desayuno: desayuno.value,
       Comida: comida.value,
       Cena: cena.value
     }
-  }, { merge: true });
-
+  },{merge:true});
   loadPlan();
 }
 
-// ==========================
-// LOAD PLAN
-// ==========================
-async function loadPlan() {
-  const user = auth.currentUser;
-  if (!user) return;
+guardarBtn.onclick = savePlan;
 
+async function loadPlan(){
+  const user = auth.currentUser;
   const doc = await db.collection("plans").doc(user.uid).get();
   renderHome(doc.exists ? doc.data() : {});
 }
 
-// ==========================
-// RENDER HOME
-// ==========================
-function renderHome(data = {}) {
+function renderHome(data={}){
   let perfilSel = perfilHome.value;
-  let html = '<table><tr><th></th>';
-  dias.forEach(d => html += `<th>${d}</th>`);
-  html += '</tr>';
-
-  ['Desayuno','Comida','Cena'].forEach(tipo => {
-    html += `<tr><th>${tipo}</th>`;
-    dias.forEach(d => {
-      let key = perfilSel + d;
-      let cell = data[key] ? data[key][tipo] : '';
-      html += `<td>${cell || ''}</td>`;
+  let html="<table><tr><th></th>";
+  dias.forEach(d=> html+=`<th>${d}</th>`);
+  html+="</tr>";
+  ["Desayuno","Comida","Cena"].forEach(tipo=>{
+    html+=`<tr><th>${tipo}</th>`;
+    dias.forEach(d=>{
+      let key=perfilSel+d;
+      html+=`<td>${data[key]?data[key][tipo]:""}</td>`;
     });
-    html += '</tr>';
+    html+="</tr>";
   });
-
-  html += '</table>';
-  tablaSemanal.innerHTML = html;
+  html+="</table>";
+  tablaSemanal.innerHTML=html;
 }
 
-perfilHome.onchange = loadPlan;
-document.getElementById('guardarBtn').onclick = savePlan;
+perfilHome.onchange=loadPlan;
 
-// ==========================
-// NAVIGATION
-// ==========================
-document.getElementById('tabHome').onclick = () => {
-  home.classList.remove('hidden');
-  plan.classList.add('hidden');
-};
+tabHome.onclick=()=>{home.classList.remove("hidden");plan.classList.add("hidden");};
+tabPlan.onclick=()=>{home.classList.add("hidden");plan.classList.remove("hidden");};
 
-document.getElementById('tabPlan').onclick = () => {
-  home.classList.add('hidden');
-  plan.classList.remove('hidden');
-};
-
-// ==========================
 // SERVICE WORKER
-// ==========================
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('./service-worker.js');
-  });
+  navigator.serviceWorker.register('./service-worker.js');
 }
 
 </script>
+
+</body>
+</html>
