@@ -1,210 +1,164 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0b1220">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="NutriApp">
-
-<title>NutriApp</title>
-
-<!-- PWA LINKS IMPORTANTES -->
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./icon-512.PNG">
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-<style>
-:root{
---bg:#0b1220;
---card:#111827;
---card2:#1f2937;
---accent:#22c55e;
---text:#f9fafb;
---muted:#9ca3af;
---danger:#ef4444;
-}
-body{margin:0;font-family:'Inter',sans-serif;background:linear-gradient(180deg,#0b1220,#0f172a);color:var(--text);} 
-h1{margin:0;font-size:26px;font-weight:700;}
-.hidden{display:none;}
-.container{padding:24px;}
-.card{background:var(--card);padding:24px;border-radius:24px;margin-bottom:20px;box-shadow:0 15px 40px rgba(0,0,0,0.45);} 
-input,select,textarea{width:100%;padding:14px;border-radius:18px;border:none;margin-top:10px;font-size:14px;background:var(--card2);color:white;}
-textarea{min-height:80px;}
-button{width:100%;padding:15px;border:none;border-radius:18px;background:var(--accent);color:white;font-weight:600;font-size:15px;margin-top:14px;cursor:pointer;}
-button.secondary{background:#374151;}
-button.danger{background:var(--danger);} 
-
-.topnav{display:flex;justify-content:space-around;background:#0b1220;border-bottom:1px solid #1f2937;position:sticky;top:0;z-index:1000;}
-.topnav button{flex:1;padding:16px;background:none;border:none;color:var(--muted);font-weight:600;}
-.topnav button.active{color:var(--accent);border-bottom:3px solid var(--accent);} 
-
-.table-wrapper{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:12px;}
-th,td{border:1px solid #1f2937;padding:8px;text-align:center;vertical-align:top;}
-th{background:#1f2937;}
-
-.center{text-align:center;margin-top:40px;}
-</style>
-</head>
-<body>
-
-<!-- LOGIN -->
-<div id="loginScreen" class="container">
-<div class="card">
-<div class="center">
-<h1>NutriApp</h1>
-<p style="color:var(--muted)">Acceso Seguro</p>
-</div>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Contraseña">
-<button id="loginBtn">Entrar</button>
-<button id="registerBtn" class="secondary">Crear Cuenta</button>
-<p id="loginError" style="color:var(--danger);display:none;">Error de autenticación</p>
-</div>
-</div>
-
-<!-- APP -->
-<div id="app" class="hidden">
-
-<div class="topnav">
-<button id="tabHome" class="active">Home</button>
-<button id="tabPlan">Plan Diario</button>
-<button id="logoutBtn">Salir</button>
-</div>
-
-<!-- HOME -->
-<div class="container" id="home">
-<div class="card">
-<h3>Resumen Semanal</h3>
-<select id="perfilHome">
-<option value="Natalia">Natalia</option>
-<option value="Luismi">Luismi</option>
-</select>
-<div class="table-wrapper">
-<div id="tablaSemanal"></div>
-</div>
-</div>
-</div>
-
-<!-- PLAN DIARIO -->
-<div class="container hidden" id="plan">
-<div class="card">
-<h3>Plan Diario</h3>
-<select id="perfil">
-<option value="Natalia">Natalia</option>
-<option value="Luismi">Luismi</option>
-</select>
-<select id="dia"></select>
-<b>Desayuno</b><textarea id="desayuno"></textarea>
-<b>Comida</b><textarea id="comida"></textarea>
-<b>Cena</b><textarea id="cena"></textarea>
-<button id="guardarBtn">Guardar Cambios</button>
-</div>
-</div>
-
-</div>
-
 <script>
+// ==========================
 // FIREBASE CONFIG
+// ==========================
 const firebaseConfig = {
   apiKey: "AIzaSyCaQq-aQ5kj2TdvccyejdjNTcZvViKIncY",
   authDomain: "nutriapp-2eeb3.firebaseapp.com",
   projectId: "nutriapp-2eeb3",
   storageBucket: "nutriapp-2eeb3.firebasestorage.app",
   messagingSenderId: "7989666043",
-  appId: "1:7989666043:web:97c20b6a3c963703d4105e",
-  measurementId: "G-B870RRM0T6"
+  appId: "1:7989666043:web:97c20b6a3c963703d4105e"
 };
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const dias=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
-const diaEl=document.getElementById('dia');
-dias.forEach(d=>diaEl.innerHTML+=`<option value="${d}">${d}</option>`);
+// Persistencia REAL en iOS PWA
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// AUTH
+// ==========================
+// VARIABLES
+// ==========================
+const dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+const diaEl = document.getElementById('dia');
+dias.forEach(d => diaEl.innerHTML += `<option value="${d}">${d}</option>`);
 
-document.getElementById('loginBtn').onclick=()=>{
-auth.signInWithEmailAndPassword(email.value,password.value)
-.catch(()=>loginError.style.display='block');
+// ==========================
+// AUTH EMAIL LOGIN
+// ==========================
+document.getElementById('loginBtn').onclick = () => {
+  auth.signInWithEmailAndPassword(email.value, password.value)
+    .catch(error => {
+      loginError.style.display = 'block';
+      loginError.innerText = error.message;
+    });
 };
 
-document.getElementById('registerBtn').onclick=()=>{
-auth.createUserWithEmailAndPassword(email.value,password.value)
-.catch(()=>loginError.style.display='block');
+// ==========================
+// AUTH REGISTER
+// ==========================
+document.getElementById('registerBtn').onclick = () => {
+  auth.createUserWithEmailAndPassword(email.value, password.value)
+    .then(() => {
+      alert("Cuenta creada correctamente");
+    })
+    .catch(error => {
+      loginError.style.display = 'block';
+      loginError.innerText = error.message;
+    });
 };
 
-document.getElementById('logoutBtn').onclick=()=>auth.signOut();
+// ==========================
+// AUTH GOOGLE (REDIRECT PARA iOS)
+// ==========================
+document.getElementById('googleBtn').onclick = async () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
 
-auth.onAuthStateChanged(user=>{
-if(user){
-loginScreen.classList.add('hidden');
-app.classList.remove('hidden');
-loadPlan();
-}else{
-loginScreen.classList.remove('hidden');
-app.classList.add('hidden');
-}
+  try {
+    await auth.signInWithRedirect(provider);
+  } catch (error) {
+    loginError.style.display = 'block';
+    loginError.innerText = error.message;
+  }
+};
+
+// ==========================
+// LOGOUT
+// ==========================
+document.getElementById('logoutBtn').onclick = () => auth.signOut();
+
+// ==========================
+// AUTH STATE LISTENER
+// ==========================
+auth.onAuthStateChanged(user => {
+  if (user) {
+    loginScreen.classList.add('hidden');
+    app.classList.remove('hidden');
+    loadPlan();
+  } else {
+    loginScreen.classList.remove('hidden');
+    app.classList.add('hidden');
+  }
 });
 
-// DATA
-async function savePlan(){
-const user=auth.currentUser;
-await db.collection("plans").doc(user.uid).set({
-[perfil.value+dia.value]:{
-Desayuno:desayuno.value,
-Comida:comida.value,
-Cena:cena.value
-}
-},{merge:true});
-loadPlan();
-}
+// ==========================
+// SAVE PLAN
+// ==========================
+async function savePlan() {
+  const user = auth.currentUser;
+  if (!user) return;
 
-async function loadPlan(){
-const user=auth.currentUser;
-const doc=await db.collection("plans").doc(user.uid).get();
-renderHome(doc.exists?doc.data():{});
-}
+  await db.collection("plans").doc(user.uid).set({
+    [perfil.value + dia.value]: {
+      Desayuno: desayuno.value,
+      Comida: comida.value,
+      Cena: cena.value
+    }
+  }, { merge: true });
 
-function renderHome(data={}){
-let perfilSel=perfilHome.value;
-let html='<table><tr><th></th>';
-dias.forEach(d=>html+=`<th>${d}</th>`);
-html+='</tr>';
-['Desayuno','Comida','Cena'].forEach(tipo=>{
-html+=`<tr><th>${tipo}</th>`;
-dias.forEach(d=>{
-let key=perfilSel+d;
-let cell=data[key]?data[key][tipo]:'';
-html+=`<td>${cell||''}</td>`;
-});
-html+='</tr>';
-});
-html+='</table>';
-tablaSemanal.innerHTML=html;
+  loadPlan();
 }
 
-perfilHome.onchange=loadPlan;
-document.getElementById('guardarBtn').onclick=savePlan;
+// ==========================
+// LOAD PLAN
+// ==========================
+async function loadPlan() {
+  const user = auth.currentUser;
+  if (!user) return;
 
-document.getElementById('tabHome').onclick=()=>{home.classList.remove('hidden');plan.classList.add('hidden');};
-document.getElementById('tabPlan').onclick=()=>{home.classList.add('hidden');plan.classList.remove('hidden');};
+  const doc = await db.collection("plans").doc(user.uid).get();
+  renderHome(doc.exists ? doc.data() : {});
+}
 
+// ==========================
+// RENDER HOME
+// ==========================
+function renderHome(data = {}) {
+  let perfilSel = perfilHome.value;
+  let html = '<table><tr><th></th>';
+  dias.forEach(d => html += `<th>${d}</th>`);
+  html += '</tr>';
+
+  ['Desayuno','Comida','Cena'].forEach(tipo => {
+    html += `<tr><th>${tipo}</th>`;
+    dias.forEach(d => {
+      let key = perfilSel + d;
+      let cell = data[key] ? data[key][tipo] : '';
+      html += `<td>${cell || ''}</td>`;
+    });
+    html += '</tr>';
+  });
+
+  html += '</table>';
+  tablaSemanal.innerHTML = html;
+}
+
+perfilHome.onchange = loadPlan;
+document.getElementById('guardarBtn').onclick = savePlan;
+
+// ==========================
+// NAVIGATION
+// ==========================
+document.getElementById('tabHome').onclick = () => {
+  home.classList.remove('hidden');
+  plan.classList.add('hidden');
+};
+
+document.getElementById('tabPlan').onclick = () => {
+  home.classList.add('hidden');
+  plan.classList.remove('hidden');
+};
+
+// ==========================
 // SERVICE WORKER
+// ==========================
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./service-worker.js');
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./service-worker.js');
+  });
 }
-</script>
 
-</body>
-</html>
+</script>
