@@ -135,6 +135,17 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
+// 🔥 PROCESAR REDIRECT DE GOOGLE (MUY IMPORTANTE)
+auth.getRedirectResult()
+  .then((result) => {
+    if (result.user) {
+      console.log("Login Google correcto:", result.user.email);
+    }
+  })
+  .catch((error) => {
+    console.error("Error redirect:", error);
+  });
+
 // ===== VARIABLES =====
 const dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 const diaEl = document.getElementById("dia");
