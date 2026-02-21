@@ -164,6 +164,7 @@ registerBtn.onclick = () => {
 
 googleBtn.onclick = async () => {
   const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
   await auth.signInWithRedirect(provider);
 };
 
