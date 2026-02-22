@@ -171,10 +171,17 @@ registerBtn.onclick = () => {
 };
 
 googleBtn.onclick = async () => {
+
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
 
-  await auth.signInWithRedirect(provider);
+  try {
+    const result = await auth.signInWithPopup(provider);
+    console.log("Login correcto:", result.user.email);
+  } catch (error) {
+    loginError.innerText = error.message;
+  }
+
 };
 
 logoutBtn.onclick = () => auth.signOut();
