@@ -150,6 +150,9 @@ auth.getRedirectResult()
     console.error("Error en redirect:", error);
   });
 
+auth.onAuthStateChanged(user => {
+  console.log("Estado auth:", user);
+});
 
 // ===== VARIABLES =====
 const dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
